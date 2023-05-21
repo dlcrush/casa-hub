@@ -5,6 +5,7 @@ import (
 
 	"github.com/dlcrush/casa-hub/common"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,6 +49,13 @@ func CreateUserHandler(c *gin.Context) {
 	}
 
 	user.Password = passwordHash
+
+	validate := validator.New()
+	err = validate.Struct(user)
+	if err != nil {
+		common.BadRequestError(c, err)
+		return
+	}
 
 	resp, err := repo.Create(user)
 	if err != nil {
@@ -104,6 +112,13 @@ func UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(user)
+	if err != nil {
+		common.BadRequestError(c, err)
+		return
+	}
+
 	// Make sure user isn't trying to write a new ID
 	user.ID = id
 
@@ -131,19 +146,33 @@ func LoginUserHandler(c *gin.Context) {
 		return
 	}
 
+	validate := validator.New()
+	err = validate.Struct(body)
+	if err != nil {
+		common.BadRequestError(c, err)
+		return
+	}
+
 	user, err := repo.FindOne(bson.D{{Key: "email", Value: body.Email}})
 	if err != nil {
 		common.UnauthorizedError(c, err)
 		return
 	}
 
-	validLogin := doPasswordsMatch(user.Password, body.Password)
-
-	if validLogin {
-		common.OK(c, gin.H{})
-	} else {
+	if doPasswordsMatch(user.Password, body.Password) == false {
 		common.UnauthorizedError(c, errors.New("Invalid credentials"))
+		return
 	}
+
+	token, err := CreateJWT(*user)
+	if err != nil {
+		common.InternalServerError(c, err)
+		return
+	}
+
+	common.OK(c, gin.H{
+		"token": token,
+	})
 }
 
 func doPasswordsMatch(hashedPassword string, password string) bool {
