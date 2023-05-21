@@ -19,3 +19,8 @@ type UserResponse struct {
 	LastName  string             `json:"lastName" bson:"last_name" validate:"required"`
 	Password  string             `json:"-" bson:"password"`
 }
+
+type LoginBody struct {
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}

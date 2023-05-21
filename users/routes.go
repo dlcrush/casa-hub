@@ -31,6 +31,12 @@ func UserRoutes(app *gin.Engine) {
 			URI:      "/user/:id",
 			Handlers: gin.HandlersChain{UpdateUserHandler},
 		},
+		{
+			Name:     "User Login",
+			Method:   "POST",
+			URI:      "/login",
+			Handlers: gin.HandlersChain{LoginUserHandler},
+		},
 	}
 
 	common.AddRoutes(app, userRoutes)

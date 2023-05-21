@@ -5,8 +5,10 @@ import (
 
 	"github.com/dlcrush/casa-hub/common"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var repo UserRepository
@@ -33,6 +35,19 @@ func CreateUserHandler(c *gin.Context) {
 		common.BadRequestError(c, errors.New("invalid body"))
 		return
 	}
+
+	if len(user.Password) < 8 {
+		common.BadRequestError(c, errors.New("password length too short"))
+		return
+	}
+
+	passwordHash, err := hashPassword(user.Password)
+	if err != nil {
+		common.InternalServerError(c, errors.New("error creating password hash"))
+		return
+	}
+
+	user.Password = passwordHash
 
 	resp, err := repo.Create(user)
 	if err != nil {
@@ -104,6 +119,45 @@ func UpdateUserHandler(c *gin.Context) {
 	common.OK(c, gin.H{
 		"user": toUserWithoutPassword(user),
 	})
+}
+
+func LoginUserHandler(c *gin.Context) {
+	connectDB()
+
+	var body LoginBody
+	err := c.Bind(&body)
+	if err != nil {
+		common.BadRequestError(c, errors.New("invalid body"))
+		return
+	}
+
+	user, err := repo.FindOne(bson.D{{Key: "email", Value: body.Email}})
+	if err != nil {
+		common.UnauthorizedError(c, err)
+		return
+	}
+
+	validLogin := doPasswordsMatch(user.Password, body.Password)
+
+	if validLogin {
+		common.OK(c, gin.H{})
+	} else {
+		common.UnauthorizedError(c, errors.New("Invalid credentials"))
+	}
+}
+
+func doPasswordsMatch(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(hashedPassword), []byte(password))
+	return err == nil
+}
+
+func hashPassword(password string) (string, error) {
+	var passwordBytes = []byte(password)
+
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
+
+	return string(hashedPasswordBytes), err
 }
 
 func toUsersWithoutPassword(users []User) []UserResponse {
