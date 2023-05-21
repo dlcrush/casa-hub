@@ -1,33 +1,40 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/dlcrush/casa-hub/common"
+	"github.com/dlcrush/casa-hub/users"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/joho/godotenv"
 )
 
 var app *gin.Engine
-var db *mongo.Database
 
 func init() {
-	var err error
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Printf("Error loading dotenv variables %s\n", err.Error())
+		panic(err)
+	}
+
 	app, err = common.InitApp()
 	if err != nil {
 		panic(err)
 	}
 
-	db, err = common.InitDB()
-	if err != nil {
-		panic(err)
-	}
+	common.OpenMongoConnection()
 
 	app.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"Message": "Hello, World!",
 		})
 	})
+
+	users.UserRoutes(app)
 }
 
 func main() {
-	app.Run(":3001")
+	app.Run("localhost:3001")
+	defer common.CloseMongoConnection()
 }

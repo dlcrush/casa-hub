@@ -9,16 +9,49 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func InitDB() (*mongo.Database, error) {
-	opts := getConnectionOptions()
+var Client *mongo.Client
+var DB *mongo.Database
 
-	client, err := mongo.Connect(context.TODO(), opts)
+func InitDB() (*mongo.Database, error) {
+	var err error
+	Client, err = GetMongoConnection()
 	if err != nil {
-		fmt.Printf("Error connecting to Mongo DB %s\n", err.Error())
 		return nil, err
 	}
 
-	return client.Database("casaHubDB"), nil
+	DB = Client.Database("casaHubDB")
+
+	return DB, nil
+}
+
+func GetMongoConnection() (*mongo.Client, error) {
+	if Client != nil {
+		return Client, nil
+	}
+
+	var err error
+	Client, err = mongo.Connect(context.TODO(), getConnectionOptions())
+	if err != nil {
+		return nil, err
+	}
+
+	return Client, nil
+}
+
+func OpenMongoConnection() {
+	InitDB()
+}
+
+func CloseMongoConnection() {
+	fmt.Println("CloseMongoConnection()")
+	if Client != nil {
+		Client.Disconnect(context.TODO())
+		Client = nil
+	}
+}
+
+func GetCollection(collection string) *mongo.Collection {
+	return DB.Collection(collection)
 }
 
 func getConnectionOptions() *options.ClientOptions {
