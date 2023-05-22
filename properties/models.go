@@ -25,6 +25,4 @@ type Room struct {
 	Description string         `json:"description" bson:"description"`
 	Notes       string         `json:"notes" bson:"notes"`
 	Images      []common.Image `json:"images" bson:"images"`
-	common.Timestamps
-	common.Audit
 }

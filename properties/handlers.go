@@ -111,10 +111,18 @@ func UpdatePropertyHandler(c *gin.Context) {
 		return
 	}
 
-	property.ID = id
+	existing, err := repo.Get(id)
+	if err != nil {
+		common.BadRequestError(c, errors.New("id not found"))
+		return
+	}
+
+	property.ID = existing.ID
 
 	now := time.Now().UTC()
 	updateUser := "TODO"
+	property.CreatedAt = existing.CreatedAt
+	property.CreatedBy = existing.CreatedBy
 	property.UpdatedAt = &now
 	property.UpdatedBy = &updateUser
 

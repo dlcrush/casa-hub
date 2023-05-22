@@ -1,6 +1,10 @@
 package common
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Image struct {
 	URL    string  `json:"url" bson:"url"`
@@ -18,4 +22,8 @@ type Audit struct {
 	CreatedBy string  `json:"createdBy" bson:"created_by"`
 	UpdatedBy *string `json:"updatedBy" bson:"updated_by"`
 	DeletedBy *string `json:"deletedBy" bson:"deleted_by"`
+}
+
+type UUID struct {
+	ID primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 }
