@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dlcrush/casa-hub/common"
-	"github.com/dlcrush/casa-hub/properties"
-	"github.com/dlcrush/casa-hub/users"
+	"github.com/dlcrush/casa-hub/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -26,8 +25,7 @@ func init() {
 
 	common.OpenMongoConnection()
 
-	users.UserRoutes(app)
-	properties.PropertiesRoutes(app)
+	routes.InitRoutes(app)
 }
 
 func main() {

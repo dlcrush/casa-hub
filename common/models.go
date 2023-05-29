@@ -27,3 +27,13 @@ type Audit struct {
 type UUID struct {
 	ID primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 }
+
+type UserEntity struct {
+	ID       primitive.ObjectID `json:"id" bson:"id"`
+	Username string             `json:"username" bson:"username"`
+}
+
+type RoomEntity struct {
+	Key  string `json:"key" bson:"key"`
+	Name string `json:"name" bson:"name"`
+}
